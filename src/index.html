@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hr">
 <head>
   <meta charset="UTF-8" />
@@ -9,7 +9,7 @@
     body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     #toolbar { display: flex; gap: 8px; padding: 8px 12px; background: #252526; border-bottom: 1px solid #3c3c3c; align-items: center; }
     body.light-mode #toolbar { background: #f3f3f3; border-bottom: 1px solid #cccccc; }
-    button, select { padding: 5px 10px; border: 1px solid #454545; background: #333333; color: #ffffff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    button, select { padding: 5px 10px; border: 1px solid #454545; background: #333333; color: #ffffff; border-radius: 4px; cursor: pointer; }
     button:hover, select:hover { background: #454545; }
     body.light-mode button, body.light-mode select { background: #ffffff; color: #222222; border-color: #cccccc; }
     body.light-mode button:hover { background: #e6e6e6; }
@@ -26,14 +26,15 @@
     <button id="btn-find">Traži (Ctrl+F)</button>
     <button id="btn-lines">Brojevi redaka: ON</button>
     <button id="btn-theme">Tema: Dark</button>
-    <select id="lang-select" title="Odaberi sintaksu">
-      <option value="plaintext">TXT (Obični tekst)</option>
-      <option value="json">JSON</option>
-      <option value="javascript">JS (JavaScript)</option>
-      <option value="xml">XML / Config</option>
+    <select id="lang-select">
+      <option value="plaintext">Obični tekst</option>
       <option value="html">HTML</option>
-      <option value="ini">INI</option>
-      <option value="lua">Lua</option>
+      <option value="css">CSS</option>
+      <option value="javascript">JavaScript</option>
+      <option value="json">JSON</option>
+      <option value="python">Python</option>
+      <option value="xml">XML</option>
+      <option value="sql">SQL</option>
     </select>
   </div>
   <div id="editor-container"></div>
