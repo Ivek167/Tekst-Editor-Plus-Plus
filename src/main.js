@@ -1,6 +1,7 @@
 import * as monaco from 'monaco-editor';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
 
 monaco.editor.defineTheme('custom-dark', {
   base: 'vs-dark',
@@ -135,4 +136,36 @@ document.getElementById('btn-theme').addEventListener('click', (e) => {
 
 document.getElementById('lang-select').addEventListener('change', (e) => {
   monaco.editor.setModelLanguage(editor.getModel(), e.target.value);
+});
+// Slušanje povlačenja datoteka (Drag and Drop)
+getCurrentWebview().onDragDropEvent(async (event) => {
+  if (event.payload.type === 'drop') {
+    const paths = event.payload.paths;
+    if (paths && paths.length > 0) {
+      const filePath = paths[0];
+      try {
+        const content = await readTextFile(filePath);
+        editor.setValue(content);
+
+        // Ažuriraj putanju u statusnoj traci i globalnu varijablu
+        const filePathLabel = document.getElementById('file-path');
+        if (filePathLabel) filePathLabel.textContent = filePath;
+        if (typeof currentFilePath !== 'undefined') currentFilePath = filePath;
+
+        // Automatsko prepoznavanje jezika po ekstenziji
+        const ext = filePath.split('.').pop().toLowerCase();
+        const langMap = {
+          html: 'html', htm: 'html', css: 'css', js: 'javascript',
+          json: 'json', py: 'python', xml: 'xml', sql: 'sql', txt: 'plaintext'
+        };
+        const detectedLang = langMap[ext] || 'plaintext';
+        monaco.editor.setModelLanguage(editor.getModel(), detectedLang);
+
+        const langSelect = document.getElementById('lang-select');
+        if (langSelect) langSelect.value = detectedLang;
+      } catch (err) {
+        alert('Greška pri otvaranju povučene datoteke: ' + err);
+      }
+    }
+  }
 });
