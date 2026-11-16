@@ -13,6 +13,11 @@ const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
   : monacoEditorPluginModule;
 
 export default defineConfig({
+  root: 'src',
+  build: {
+    outDir: '../dist',
+    emptyOutDir: true
+  },
   plugins: [
     monacoEditorPlugin({
       languageWorkers: ['editorWorkerService', 'json', 'html', 'css', 'typescript']
