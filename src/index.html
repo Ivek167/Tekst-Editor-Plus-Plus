@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portable Editor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    #toolbar { display: flex; gap: 8px; padding: 8px 12px; background: #252526; border-bottom: 1px solid #3c3c3c; align-items: center; }
+    body.light-mode #toolbar { background: #f3f3f3; border-bottom: 1px solid #cccccc; }
+    button, select { padding: 5px 10px; border: 1px solid #454545; background: #333333; color: #ffffff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    button:hover, select:hover { background: #454545; }
+    body.light-mode button, body.light-mode select { background: #ffffff; color: #222222; border-color: #cccccc; }
+    body.light-mode button:hover { background: #e6e6e6; }
+    #status-bar { padding: 4px 12px; font-size: 12px; background: #007acc; color: #ffffff; display: flex; justify-content: space-between; }
+    #editor-container { flex: 1; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <button id="btn-new">Novo</button>
+    <button id="btn-open">Otvori</button>
+    <button id="btn-save">Spremi</button>
+    <button id="btn-save-as">Spremi kao...</button>
+    <button id="btn-find">Traži (Ctrl+F)</button>
+    <button id="btn-lines">Brojevi redaka: ON</button>
+    <button id="btn-theme">Tema: Dark</button>
+    <select id="lang-select" title="Odaberi sintaksu">
+      <option value="plaintext">TXT (Obični tekst)</option>
+      <option value="json">JSON</option>
+      <option value="javascript">JS (JavaScript)</option>
+      <option value="xml">XML / Config</option>
+      <option value="html">HTML</option>
+      <option value="ini">INI</option>
+      <option value="lua">Lua</option>
+    </select>
+  </div>
+  <div id="editor-container"></div>
+  <div id="status-bar">
+    <span id="file-path">Novi dokument (nespremljeno)</span>
+    <span id="cursor-pos">Red 1, Stupac 1</span>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
+
