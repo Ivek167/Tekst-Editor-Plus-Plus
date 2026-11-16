@@ -1,6 +1,6 @@
 {
   "$schema": "https://tauri.app",
-  "productName": "NotepadPlusPlus",
+  "productName": "Tekst-Editor-Plus-Plus",
   "version": "0.1.0",
   "identifier": "com.codespace.tauri-app",
   "build": {
@@ -11,7 +11,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Notepad++ Portable",
+        "title": "Tekst-Editor-Plus-Plus",
         "width": 1200,
         "height": 800
       }
