@@ -16,175 +16,283 @@ self.MonacoEnvironment = {
   }
 };
 
-
 import * as monaco from 'monaco-editor';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 
+// Prilagođena tamna tema
 monaco.editor.defineTheme('custom-dark', {
   base: 'vs-dark',
   inherit: true,
-  rules: [
-    { token: '', foreground: 'd4d4d4' },
-    { token: 'identifier', foreground: '9cdcfe' },
-    { token: 'keyword', foreground: '569cd6' },
-    { token: 'string', foreground: 'ce9178' },
-    { token: 'number', foreground: 'b5cea8' },
-    { token: 'tag', foreground: '9cdcfe' },
-    { token: 'attribute.name', foreground: '9cdcfe' }
-  ],
+  rules: [],
   colors: {
     'editor.background': '#1e1e1e',
-    'editor.foreground': '#d4d4d4',
-    'editorLineNumber.foreground': '#858585',
-    'editorLineNumber.activeForeground': '#9cdcfe'
   }
 });
 
+let isDark = true;
+let showLineNumbers = true;
+
+// Inicijalizacija glavnog editora
 const editor = monaco.editor.create(document.getElementById('editor-container'), {
-  value: '',
-  language: 'plaintext',
   theme: 'custom-dark',
   automaticLayout: true,
-  lineNumbers: 'on',
   fontSize: 14,
   minimap: { enabled: true },
-  wordWrap: 'on'
+  lineNumbers: 'on',
+  wordWrap: 'off'
 });
 
-let currentFilePath = null;
-let showLineNumbers = true;
-let isDarkMode = true;
+// Upravljanje karticama (Tabovima)
+let tabs = [];
+let activeTabId = null;
+let untitledCounter = 1;
 
-editor.onDidChangeCursorPosition((e) => {
-  document.getElementById('cursor-pos').textContent = `Red ${e.position.lineNumber}, Stupac ${e.position.column}`;
-});
+const tabsBar = document.getElementById('tabs-bar');
+const filePathLabel = document.getElementById('file-path');
+const cursorPosLabel = document.getElementById('cursor-pos');
+const langSelect = document.getElementById('lang-select');
 
 function detectLanguage(filePath) {
+  if (!filePath) return 'plaintext';
   const ext = filePath.split('.').pop().toLowerCase();
   const map = {
-    'txt': 'plaintext', 'json': 'json', 'js': 'javascript',
-    'xml': 'xml', 'config': 'xml', 'html': 'html', 'ini': 'ini', 'lua': 'lua'
+    html: 'html', htm: 'html',
+    css: 'css', scss: 'css',
+    js: 'javascript', ts: 'typescript',
+    json: 'json',
+    py: 'python',
+    xml: 'xml',
+    sql: 'sql',
+    yml: 'yaml', yaml: 'yaml',
+    rs: 'rust',
+    md: 'markdown'
   };
-  const lang = map[ext] || 'plaintext';
-  monaco.editor.setModelLanguage(editor.getModel(), lang);
-  document.getElementById('lang-select').value = lang;
+  return map[ext] || 'plaintext';
 }
 
-document.getElementById('btn-new').addEventListener('click', () => {
-  editor.setValue('');
-  currentFilePath = null;
-  document.getElementById('file-path').textContent = 'Novi dokument (nespremljeno)';
-});
+function getFileName(filePath) {
+  if (!filePath) return null;
+  return filePath.split(/[/\\]/).pop();
+}
 
-document.getElementById('btn-open').addEventListener('click', async () => {
-  const selected = await open({
-    multiple: false,
-    filters: [{
-      name: 'Podržane datoteke',
-      extensions: ['txt', 'json', 'js', 'xml', 'html', 'ini', 'lua', 'config', '*']
-    }]
+function renderTabs() {
+  tabsBar.innerHTML = '';
+  tabs.forEach(tab => {
+    const tabEl = document.createElement('div');
+    tabEl.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+    tabEl.title = tab.filePath || tab.title;
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'tab-title';
+    titleSpan.textContent = (tab.isDirty ? '* ' : '') + tab.title;
+
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'tab-close';
+    closeBtn.textContent = '×';
+    closeBtn.title = 'Zatvori karticu (Ctrl+W)';
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      closeTab(tab.id);
+    };
+
+    tabEl.onclick = () => switchTab(tab.id);
+    tabEl.appendChild(titleSpan);
+    tabEl.appendChild(closeBtn);
+    tabsBar.appendChild(tabEl);
   });
-  if (selected) {
-    const content = await readTextFile(selected);
-    editor.setValue(content);
-    currentFilePath = selected;
-    document.getElementById('file-path').textContent = selected;
-    detectLanguage(selected);
-  }
-});
+}
 
-async function saveAsFile() {
-  const filePath = await save({
-    defaultPath: 'dokument.txt',
-    filters: [
-      { name: 'Tekstualni dokument (*.txt)', extensions: ['txt'] },
-      { name: 'JSON datoteka (*.json)', extensions: ['json'] },
-      { name: 'JavaScript (*.js)', extensions: ['js'] },
-      { name: 'XML datoteka (*.xml)', extensions: ['xml'] },
-      { name: 'HTML stranica (*.html)', extensions: ['html'] },
-      { name: 'INI konfiguracija (*.ini)', extensions: ['ini'] },
-      { name: 'Lua skripta (*.lua)', extensions: ['lua'] },
-      { name: 'Config datoteka (*.config)', extensions: ['config'] },
-      { name: 'Sve datoteke (*.*)', extensions: ['*'] }
-    ]
-  });
-
+function createNewTab(filePath = null, content = '') {
+  // Ako je datoteka već otvorena u nekoj kartici, samo se prebaci na nju
   if (filePath) {
-    await writeTextFile(filePath, editor.getValue());
-    currentFilePath = filePath;
-    document.getElementById('file-path').textContent = filePath;
-    detectLanguage(filePath);
+    const existing = tabs.find(t => t.filePath === filePath);
+    if (existing) {
+      switchTab(existing.id);
+      return;
+    }
+  }
+
+  const id = Date.now() + Math.random();
+  const lang = detectLanguage(filePath);
+  const title = filePath ? getFileName(filePath) : `Novi dokument ${untitledCounter++}`;
+  const model = monaco.editor.createModel(content, lang);
+
+  const tab = {
+    id,
+    title,
+    filePath,
+    model,
+    isDirty: false
+  };
+
+  // Praćenje izmjena u tekstu (dodaje zvjezdicu * na karticu)
+  model.onDidChangeContent(() => {
+    if (!tab.isDirty) {
+      tab.isDirty = true;
+      renderTabs();
+    }
+  });
+
+  tabs.push(tab);
+  switchTab(id);
+}
+
+function switchTab(id) {
+  const tab = tabs.find(t => t.id === id);
+  if (!tab) return;
+
+  activeTabId = id;
+  editor.setModel(tab.model);
+  filePathLabel.textContent = tab.filePath || tab.title;
+  langSelect.value = tab.model.getLanguageId();
+  renderTabs();
+  editor.focus();
+}
+
+function closeTab(id) {
+  const index = tabs.findIndex(t => t.id === id);
+  if (index === -1) return;
+
+  const tab = tabs[index];
+  if (tab.isDirty) {
+    const ok = confirm(`Dokument "${tab.title}" ima nespremljene promjene. Svejedno zatvoriti?`);
+    if (!ok) return;
+  }
+
+  tab.model.dispose();
+  tabs.splice(index, 1);
+
+  if (tabs.length === 0) {
+    createNewTab();
+  } else if (activeTabId === id) {
+    const nextTab = tabs[Math.max(0, index - 1)];
+    switchTab(nextTab.id);
+  } else {
+    renderTabs();
   }
 }
 
-document.getElementById('btn-save').addEventListener('click', async () => {
-  if (currentFilePath) {
-    await writeTextFile(currentFilePath, editor.getValue());
-  } else {
-    await saveAsFile();
+// Praćenje pozicije kursora u statusnoj traci
+editor.onDidChangeCursorPosition((e) => {
+  cursorPosLabel.textContent = `Red ${e.position.lineNumber}, Stupac ${e.position.column}`;
+});
+
+// Funkcije za rad s datotekama
+async function handleOpenFile() {
+  try {
+    const selected = await open({ multiple: true });
+    if (!selected) return;
+    const paths = Array.isArray(selected) ? selected : [selected];
+    for (const filePath of paths) {
+      const content = await readTextFile(filePath);
+      createNewTab(filePath, content);
+    }
+  } catch (err) {
+    alert('Greška pri otvaranju datoteke: ' + err);
   }
-});
+}
 
-document.getElementById('btn-save-as').addEventListener('click', saveAsFile);
+async function handleSaveFile(forceSaveAs = false) {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
 
-document.getElementById('btn-find').addEventListener('click', () => {
-  editor.focus();
+  try {
+    let targetPath = tab.filePath;
+    if (!targetPath || forceSaveAs) {
+      targetPath = await save({ defaultPath: tab.title });
+      if (!targetPath) return;
+    }
+
+    await writeTextFile(targetPath, tab.model.getValue());
+    tab.filePath = targetPath;
+    tab.title = getFileName(targetPath);
+    tab.isDirty = false;
+
+    const newLang = detectLanguage(targetPath);
+    monaco.editor.setModelLanguage(tab.model, newLang);
+    langSelect.value = newLang;
+    filePathLabel.textContent = targetPath;
+    renderTabs();
+  } catch (err) {
+    alert('Greška pri spremanju datoteke: ' + err);
+  }
+}
+
+// Povezivanje gumbi na alatnoj traci
+document.getElementById('btn-new').onclick = () => createNewTab();
+document.getElementById('btn-open').onclick = handleOpenFile;
+document.getElementById('btn-save').onclick = () => handleSaveFile(false);
+document.getElementById('btn-save-as').onclick = () => handleSaveFile(true);
+
+document.getElementById('btn-find').onclick = () => {
   editor.trigger('keyboard', 'actions.find', null);
-});
+};
 
-document.getElementById('btn-lines').addEventListener('click', (e) => {
+document.getElementById('btn-lines').onclick = (e) => {
   showLineNumbers = !showLineNumbers;
   editor.updateOptions({ lineNumbers: showLineNumbers ? 'on' : 'off' });
   e.target.textContent = `Brojevi redaka: ${showLineNumbers ? 'ON' : 'OFF'}`;
-});
+};
 
-document.getElementById('btn-theme').addEventListener('click', (e) => {
-  isDarkMode = !isDarkMode;
-  if (isDarkMode) {
-    monaco.editor.setTheme('custom-dark');
-    document.body.classList.remove('light-mode');
-    e.target.textContent = 'Tema: Dark';
-  } else {
-    monaco.editor.setTheme('vs');
-    document.body.classList.add('light-mode');
-    e.target.textContent = 'Tema: Light';
+document.getElementById('btn-theme').onclick = (e) => {
+  isDark = !isDark;
+  monaco.editor.setTheme(isDark ? 'custom-dark' : 'vs');
+  document.body.classList.toggle('light-mode', !isDark);
+  e.target.textContent = `Tema: ${isDark ? 'Dark' : 'Light'}`;
+};
+
+langSelect.onchange = (e) => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (tab) {
+    monaco.editor.setModelLanguage(tab.model, e.target.value);
   }
-});
+};
 
-document.getElementById('lang-select').addEventListener('change', (e) => {
-  monaco.editor.setModelLanguage(editor.getModel(), e.target.value);
-});
-// Slušanje povlačenja datoteka (Drag and Drop)
-getCurrentWebview().onDragDropEvent(async (event) => {
-  if (event.payload.type === 'drop') {
-    const paths = event.payload.paths;
-    if (paths && paths.length > 0) {
-      const filePath = paths[0];
-      try {
-        const content = await readTextFile(filePath);
-        editor.setValue(content);
-
-        // Ažuriraj putanju u statusnoj traci i globalnu varijablu
-        const filePathLabel = document.getElementById('file-path');
-        if (filePathLabel) filePathLabel.textContent = filePath;
-        if (typeof currentFilePath !== 'undefined') currentFilePath = filePath;
-
-        // Automatsko prepoznavanje jezika po ekstenziji
-        const ext = filePath.split('.').pop().toLowerCase();
-        const langMap = {
-          html: 'html', htm: 'html', css: 'css', js: 'javascript',
-          json: 'json', py: 'python', xml: 'xml', sql: 'sql', txt: 'plaintext'
-        };
-        const detectedLang = langMap[ext] || 'plaintext';
-        monaco.editor.setModelLanguage(editor.getModel(), detectedLang);
-
-        const langSelect = document.getElementById('lang-select');
-        if (langSelect) langSelect.value = detectedLang;
-      } catch (err) {
-        alert('Greška pri otvaranju povučene datoteke: ' + err);
+// Tipkovnički prečaci (Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S, Ctrl+W, Ctrl+Tab)
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    const key = e.key.toLowerCase();
+    if (key === 'n') {
+      e.preventDefault();
+      createNewTab();
+    } else if (key === 'o') {
+      e.preventDefault();
+      handleOpenFile();
+    } else if (key === 's') {
+      e.preventDefault();
+      handleSaveFile(e.shiftKey);
+    } else if (key === 'w') {
+      e.preventDefault();
+      if (activeTabId) closeTab(activeTabId);
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      if (tabs.length > 1) {
+        const idx = tabs.findIndex(t => t.id === activeTabId);
+        const nextIdx = e.shiftKey ? (idx - 1 + tabs.length) % tabs.length : (idx + 1) % tabs.length;
+        switchTab(tabs[nextIdx].id);
       }
     }
   }
 });
+
+// Drag and Drop podrška (otvara sve povučene datoteke u novim karticama)
+getCurrentWebview().onDragDropEvent(async (event) => {
+  if (event.payload.type === 'drop') {
+    const paths = event.payload.paths;
+    if (paths && paths.length > 0) {
+      for (const filePath of paths) {
+        try {
+          const content = await readTextFile(filePath);
+          createNewTab(filePath, content);
+        } catch (err) {
+          alert(`Greška pri otvaranju datoteke ${filePath}: ` + err);
+        }
+      }
+    }
+  }
+});
+
+// Pokreni s jednim početnim dokumentom
+createNewTab();

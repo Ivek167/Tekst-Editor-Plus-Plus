@@ -3,30 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tekst-Editor-Plus-Plus Portable Editor</title>
+  <title>Tekst-Editor-Plus-Plus</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #1e1e1e; color: #ffffff; }
-    #toolbar { display: flex; gap: 8px; padding: 8px 12px; background: #252526; border-bottom: 1px solid #3c3c3c; align-items: center; }
+    
+    /* Alatna traka */
+    #toolbar { display: flex; gap: 6px; padding: 6px 10px; background: #252526; border-bottom: 1px solid #3c3c3c; align-items: center; flex-wrap: wrap; }
     body.light-mode #toolbar { background: #f3f3f3; border-bottom: 1px solid #cccccc; }
-    button, select { padding: 5px 10px; border: 1px solid #454545; background: #333333; color: #ffffff; border-radius: 4px; cursor: pointer; }
+    
+    button, select { padding: 4px 10px; border: 1px solid #454545; background: #333333; color: #ffffff; border-radius: 4px; cursor: pointer; font-size: 13px; }
     button:hover, select:hover { background: #454545; }
     body.light-mode button, body.light-mode select { background: #ffffff; color: #222222; border-color: #cccccc; }
     body.light-mode button:hover { background: #e6e6e6; }
-    #status-bar { padding: 4px 12px; font-size: 12px; background: #007acc; color: #ffffff; display: flex; justify-content: space-between; }
+
+    /* Traka s karticama (Tabovi) */
+    #tabs-bar { display: flex; background: #2d2d2d; border-bottom: 1px solid #1e1e1e; overflow-x: auto; min-height: 32px; align-items: flex-end; padding: 0 4px; gap: 2px; }
+    body.light-mode #tabs-bar { background: #e1e1e1; border-bottom: 1px solid #cccccc; }
+    
+    .tab { display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: #252526; color: #969696; border-top-left-radius: 4px; border-top-right-radius: 4px; cursor: pointer; font-size: 13px; user-select: none; border: 1px solid transparent; border-bottom: none; max-width: 200px; }
+    .tab:hover { background: #2a2d2e; color: #ffffff; }
+    .tab.active { background: #1e1e1e; color: #ffffff; border-color: #3c3c3c; font-weight: 500; }
+    
+    body.light-mode .tab { background: #ececec; color: #555555; }
+    body.light-mode .tab:hover { background: #f5f5f5; color: #000000; }
+    body.light-mode .tab.active { background: #ffffff; color: #000000; border-color: #cccccc; }
+
+    .tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab-close { font-size: 14px; line-height: 1; padding: 1px 4px; border-radius: 3px; opacity: 0.7; }
+    .tab-close:hover { background: #c42b1c; color: #ffffff; opacity: 1; }
+
+    /* Editor i statusna traka */
     #editor-container { flex: 1; width: 100%; }
+    #status-bar { padding: 4px 12px; font-size: 12px; background: #007acc; color: #ffffff; display: flex; justify-content: space-between; }
   </style>
 </head>
 <body>
   <div id="toolbar">
-    <button id="btn-new">Novo</button>
-    <button id="btn-open">Otvori</button>
-    <button id="btn-save">Spremi</button>
-    <button id="btn-save-as">Spremi kao...</button>
-    <button id="btn-find">Traži (Ctrl+F)</button>
+    <button id="btn-new" title="Novi dokument (Ctrl+N)">Novo</button>
+    <button id="btn-open" title="Otvori datoteku (Ctrl+O)">Otvori</button>
+    <button id="btn-save" title="Spremi (Ctrl+S)">Spremi</button>
+    <button id="btn-save-as" title="Spremi kao...">Spremi kao...</button>
+    <button id="btn-find" title="Traži u tekstu (Ctrl+F)">Traži</button>
     <button id="btn-lines">Brojevi redaka: ON</button>
     <button id="btn-theme">Tema: Dark</button>
-    <select id="lang-select">
+    <select id="lang-select" title="Odabir sintakse">
       <option value="plaintext">Obični tekst</option>
       <option value="html">HTML</option>
       <option value="css">CSS</option>
@@ -35,13 +56,20 @@
       <option value="python">Python</option>
       <option value="xml">XML</option>
       <option value="sql">SQL</option>
+      <option value="yaml">YAML</option>
+      <option value="rust">Rust</option>
+      <option value="markdown">Markdown</option>
     </select>
   </div>
+  
+  <div id="tabs-bar"></div>
   <div id="editor-container"></div>
+  
   <div id="status-bar">
-    <span id="file-path">Novi dokument (nespremljeno)</span>
+    <span id="file-path">Novi dokument 1</span>
     <span id="cursor-pos">Red 1, Stupac 1</span>
   </div>
+  
   <script type="module" src="/main.js"></script>
 </body>
 </html>
