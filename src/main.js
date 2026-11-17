@@ -34,11 +34,14 @@ monaco.editor.defineTheme('custom-dark', {
 let isDark = true;
 let showLineNumbers = true;
 
-// Inicijalizacija glavnog editora
+// Inicijalizacija glavnog editora s fiksnim metrikama fonta za Windows WebView2
 const editor = monaco.editor.create(document.getElementById('editor-container'), {
   theme: 'custom-dark',
   automaticLayout: true,
+  fontFamily: 'Consolas, "Courier New", monospace',
   fontSize: 14,
+  lineHeight: 21,
+  fontLigatures: false,
   minimap: { enabled: true },
   lineNumbers: 'on',
   wordWrap: 'off'
@@ -148,6 +151,7 @@ function switchTab(id) {
   filePathLabel.textContent = tab.filePath || tab.title;
   langSelect.value = tab.model.getLanguageId();
   renderTabs();
+  editor.layout();
   editor.focus();
 }
 
@@ -171,6 +175,7 @@ function closeTab(id) {
     switchTab(nextTab.id);
   } else {
     renderTabs();
+    editor.layout();
   }
 }
 
@@ -292,6 +297,12 @@ getCurrentWebview().onDragDropEvent(async (event) => {
       }
     }
   }
+});
+
+// Osiguraj ponovno mjerenje fontova nakon što se stranica potpuno učita
+window.addEventListener('load', () => {
+  monaco.editor.remeasureFonts();
+  editor.layout();
 });
 
 // Pokreni s jednim početnim dokumentom
