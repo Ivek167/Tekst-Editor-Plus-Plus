@@ -55,10 +55,34 @@ const filePathLabel = document.getElementById('file-path');
 const cursorPosLabel = document.getElementById('cursor-pos');
 const langSelect = document.getElementById('lang-select');
 
+// Filtri formata za prozore Otvori i Spremi kao
+const FILE_FILTERS = [
+  { name: 'Tekstualna datoteka (*.txt)', extensions: ['txt'] },
+  { name: 'JSON datoteka (*.json)', extensions: ['json'] },
+  { name: 'Lua skripta (*.lua)', extensions: ['lua'] },
+  { name: 'Log datoteka (*.log)', extensions: ['log'] },
+  { name: 'HTML dokument (*.html, *.htm)', extensions: ['html', 'htm'] },
+  { name: 'CSS stilovi (*.css, *.scss)', extensions: ['css', 'scss'] },
+  { name: 'JavaScript / TypeScript (*.js, *.ts)', extensions: ['js', 'ts'] },
+  { name: 'XML datoteka (*.xml)', extensions: ['xml'] },
+  { name: 'SQL upit (*.sql)', extensions: ['sql'] },
+  { name: 'YAML konfiguracija (*.yml, *.yaml)', extensions: ['yml', 'yaml'] },
+  { name: 'Python skripta (*.py)', extensions: ['py'] },
+  { name: 'Rust izvorni kod (*.rs)', extensions: ['rs'] },
+  { name: 'Markdown dokument (*.md)', extensions: ['md'] },
+  { name: 'Konfiguracijske datoteke (*.ini, *.cfg, *.csv)', extensions: ['ini', 'cfg', 'csv'] },
+  { name: 'Sve datoteke (*.*)', extensions: ['*'] }
+];
+
 function detectLanguage(filePath) {
   if (!filePath) return 'plaintext';
   const ext = filePath.split('.').pop().toLowerCase();
   const map = {
+    txt: 'plaintext',
+    log: 'plaintext',
+    ini: 'ini',
+    cfg: 'ini',
+    lua: 'lua',
     html: 'html', htm: 'html',
     css: 'css', scss: 'css',
     js: 'javascript', ts: 'typescript',
@@ -181,7 +205,13 @@ editor.onDidChangeCursorPosition((e) => {
 
 async function handleOpenFile() {
   try {
-    const selected = await open({ multiple: true });
+    const selected = await open({
+      multiple: true,
+      filters: [
+        { name: 'Sve podržane datoteke', extensions: ['txt', 'json', 'lua', 'log', 'html', 'htm', 'css', 'js', 'ts', 'xml', 'sql', 'yml', 'yaml', 'py', 'rs', 'md', 'ini', 'cfg', 'csv'] },
+        ...FILE_FILTERS
+      ]
+    });
     if (!selected) return;
     const paths = Array.isArray(selected) ? selected : [selected];
     for (const filePath of paths) {
@@ -200,7 +230,10 @@ async function handleSaveFile(forceSaveAs = false) {
   try {
     let targetPath = tab.filePath;
     if (!targetPath || forceSaveAs) {
-      targetPath = await save({ defaultPath: tab.title });
+      targetPath = await save({
+        defaultPath: tab.filePath || tab.title,
+        filters: FILE_FILTERS
+      });
       if (!targetPath) return;
     }
 
@@ -291,8 +324,7 @@ getCurrentWebview().onDragDropEvent(async (event) => {
 });
 
 window.addEventListener('load', () => {
-  monaco.editor.remeasureFonts();
-  editor.layout();
+monaco.editor.remeasureFonts();
+editor.layout();
 });
-
 createNewTab();
