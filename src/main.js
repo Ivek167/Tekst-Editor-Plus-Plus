@@ -1,3 +1,9 @@
+import 'monaco-editor/min/vs/editor/editor.main.css';
+import * as monaco from 'monaco-editor';
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
+
 self.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === 'json') {
@@ -16,11 +22,6 @@ self.MonacoEnvironment = {
   }
 };
 
-import * as monaco from 'monaco-editor';
-import { open, save } from '@tauri-apps/plugin-dialog';
-import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-import { getCurrentWebview } from '@tauri-apps/api/webview';
-
 // Prilagođena tamna tema
 monaco.editor.defineTheme('custom-dark', {
   base: 'vs-dark',
@@ -34,7 +35,7 @@ monaco.editor.defineTheme('custom-dark', {
 let isDark = true;
 let showLineNumbers = true;
 
-// Inicijalizacija glavnog editora s fiksnim metrikama fonta za Windows WebView2
+// Inicijalizacija glavnog editora
 const editor = monaco.editor.create(document.getElementById('editor-container'), {
   theme: 'custom-dark',
   automaticLayout: true,
@@ -42,6 +43,7 @@ const editor = monaco.editor.create(document.getElementById('editor-container'),
   fontSize: 14,
   lineHeight: 21,
   fontLigatures: false,
+  disableMonospaceOptimizations: true,
   minimap: { enabled: true },
   lineNumbers: 'on',
   wordWrap: 'off'
@@ -108,7 +110,6 @@ function renderTabs() {
 }
 
 function createNewTab(filePath = null, content = '') {
-  // Ako je datoteka već otvorena u nekoj kartici, samo se prebaci na nju
   if (filePath) {
     const existing = tabs.find(t => t.filePath === filePath);
     if (existing) {
@@ -130,7 +131,6 @@ function createNewTab(filePath = null, content = '') {
     isDirty: false
   };
 
-  // Praćenje izmjena u tekstu (dodaje zvjezdicu * na karticu)
   model.onDidChangeContent(() => {
     if (!tab.isDirty) {
       tab.isDirty = true;
@@ -179,12 +179,10 @@ function closeTab(id) {
   }
 }
 
-// Praćenje pozicije kursora u statusnoj traci
 editor.onDidChangeCursorPosition((e) => {
   cursorPosLabel.textContent = `Red ${e.position.lineNumber}, Stupac ${e.position.column}`;
 });
 
-// Funkcije za rad s datotekama
 async function handleOpenFile() {
   try {
     const selected = await open({ multiple: true });
@@ -225,7 +223,6 @@ async function handleSaveFile(forceSaveAs = false) {
   }
 }
 
-// Povezivanje gumbi na alatnoj traci
 document.getElementById('btn-new').onclick = () => createNewTab();
 document.getElementById('btn-open').onclick = handleOpenFile;
 document.getElementById('btn-save').onclick = () => handleSaveFile(false);
@@ -255,7 +252,6 @@ langSelect.onchange = (e) => {
   }
 };
 
-// Tipkovnički prečaci (Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S, Ctrl+W, Ctrl+Tab)
 window.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey) {
     const key = e.key.toLowerCase();
@@ -282,7 +278,6 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Drag and Drop podrška (otvara sve povučene datoteke u novim karticama)
 getCurrentWebview().onDragDropEvent(async (event) => {
   if (event.payload.type === 'drop') {
     const paths = event.payload.paths;
@@ -299,11 +294,9 @@ getCurrentWebview().onDragDropEvent(async (event) => {
   }
 });
 
-// Osiguraj ponovno mjerenje fontova nakon što se stranica potpuno učita
 window.addEventListener('load', () => {
   monaco.editor.remeasureFonts();
   editor.layout();
 });
 
-// Pokreni s jednim početnim dokumentom
 createNewTab();
