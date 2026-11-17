@@ -1,9 +1,3 @@
-import 'monaco-editor/min/vs/editor/editor.main.css';
-import * as monaco from 'monaco-editor';
-import { open, save } from '@tauri-apps/plugin-dialog';
-import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-import { getCurrentWebview } from '@tauri-apps/api/webview';
-
 self.MonacoEnvironment = {
   getWorker(_, label) {
     if (label === 'json') {
@@ -22,7 +16,11 @@ self.MonacoEnvironment = {
   }
 };
 
-// Prilagođena tamna tema
+import * as monaco from 'monaco-editor';
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
+
 monaco.editor.defineTheme('custom-dark', {
   base: 'vs-dark',
   inherit: true,
@@ -35,7 +33,6 @@ monaco.editor.defineTheme('custom-dark', {
 let isDark = true;
 let showLineNumbers = true;
 
-// Inicijalizacija glavnog editora
 const editor = monaco.editor.create(document.getElementById('editor-container'), {
   theme: 'custom-dark',
   automaticLayout: true,
@@ -49,7 +46,6 @@ const editor = monaco.editor.create(document.getElementById('editor-container'),
   wordWrap: 'off'
 });
 
-// Upravljanje karticama (Tabovima)
 let tabs = [];
 let activeTabId = null;
 let untitledCounter = 1;
