@@ -17,6 +17,8 @@ self.MonacoEnvironment = {
 };
 
 import * as monaco from 'monaco-editor';
+
+
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
@@ -188,15 +190,16 @@ let currentFontSize = parseInt(localStorage.getItem('fontSize'), 10) || 14;
 const editor = monaco.editor.create(document.getElementById('editor-container'), {
   theme: 'custom-dark',
   automaticLayout: true,
-  fontFamily: 'Consolas, "Courier New", monospace',
+  fontFamily: '"Cascadia Code", Consolas, "Courier New", monospace',
   fontSize: currentFontSize,
   lineHeight: Math.round(currentFontSize * 1.5),
   fontLigatures: false,
-  disableMonospaceOptimizations: true,
   minimap: { enabled: false },
   lineNumbers: 'on',
-  wordWrap: isWordWrap ? 'on' : 'off'
+  wordWrap: isWordWrap ? 'on' : 'off',
+  wrappingStrategy: 'advanced'
 });
+
 
 let tabs = [];
 let activeTabId = null;
@@ -569,10 +572,11 @@ getCurrentWebview().onDragDropEvent(async (event) => {
   }
 });
 
-window.addEventListener('load', () => {
+document.fonts.ready.then(() => {
   monaco.editor.remeasureFonts();
   editor.layout();
 });
+
 
 createNewTab();
 applyUiLanguage();
