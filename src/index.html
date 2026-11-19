@@ -15,7 +15,11 @@
     button, select { padding: 4px 10px; border: 1px solid #454545; background: #333333; color: #ffffff; border-radius: 4px; cursor: pointer; font-size: 13px; }
     button:hover, select:hover { background: #454545; }
     body.light-mode button, body.light-mode select { background: #ffffff; color: #222222; border-color: #cccccc; }
-    body.light-mode button:hover { background: #e6e6e6; }
+    body.light-mode button:hover, body.light-mode select:hover { background: #e6e6e6; }
+
+    .font-controls { display: inline-flex; align-items: center; gap: 3px; }
+    .font-controls button { padding: 4px 8px; font-weight: bold; }
+    #font-size-label { font-size: 12px; min-width: 34px; text-align: center; user-select: none; }
 
     /* Traka s karticama (Tabovi) */
     #tabs-bar { display: flex; background: #2d2d2d; border-bottom: 1px solid #1e1e1e; overflow-x: auto; min-height: 32px; align-items: flex-end; padding: 0 4px; gap: 2px; flex-shrink: 0; }
@@ -45,15 +49,25 @@
     <button id="btn-save" title="Spremi (Ctrl+S)">Spremi</button>
     <button id="btn-save-as" title="Spremi kao...">Spremi kao...</button>
     <button id="btn-find" title="Traži u tekstu (Ctrl+F)">Traži</button>
+    <button id="btn-wrap">Word Wrap: OFF</button>
     <button id="btn-lines">Brojevi redaka: ON</button>
+    <button id="btn-minimap">Minimap: OFF</button>
     <button id="btn-theme">Tema: Dark</button>
+
+    <div class="font-controls">
+      <button id="btn-font-dec" title="Smanji font">A-</button>
+      <span id="font-size-label">14px</span>
+      <button id="btn-font-inc" title="Povećaj font">A+</button>
+    </div>
+
     <select id="lang-select" title="Odabir sintakse">
-      <option value="plaintext">Obični tekst / Log</option>
+      <option id="opt-plaintext" value="plaintext">Obični tekst / Log</option>
       <option value="json">JSON</option>
       <option value="lua">Lua</option>
       <option value="html">HTML</option>
       <option value="css">CSS</option>
       <option value="javascript">JavaScript</option>
+      <option value="typescript">TypeScript</option>
       <option value="python">Python</option>
       <option value="xml">XML</option>
       <option value="sql">SQL</option>
@@ -61,6 +75,16 @@
       <option value="rust">Rust</option>
       <option value="markdown">Markdown</option>
       <option value="ini">INI / Config</option>
+    </select>
+
+    <select id="ui-lang-select" title="Jezik sučelja">
+      <option value="hr">🇭🇷 Hrvatski</option>
+      <option value="sl">🇸🇮 Slovenščina</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="it">🇮🇹 Italiano</option>
+      <option value="de">🇩🇪 Deutsch</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="pl">🇵🇱 Polski</option>
     </select>
   </div>
   
