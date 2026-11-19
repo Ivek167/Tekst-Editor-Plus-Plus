@@ -239,9 +239,10 @@ function applyUiLanguage() {
     filePathLabel.textContent = activeTab.filePath || activeTab.title;
   }
 
-Pripazite na kôd.
+// Pripazite na kôd.
 const pos = editor.getPosition() || { lineNumber: 1, column: 1 };
-cursorPosLabel.textContent = ${tr.line} ${pos.lineNumber}, ${tr.col} ${pos.column};
+cursorPosLabel.textContent = `${tr.line} ${pos.lineNumber}, ${tr.col} ${pos.column}`;
+
 renderTabs();
 }
 uiLangSelect.onchange = (e) => {
@@ -291,7 +292,8 @@ return map[ext] || 'plaintext';
 }
 function getFileName(filePath) {
 if (!filePath) return null;
-return filePath.split(/[/\]/).pop();
+return filePath.split(/[/\\]/).pop();
+
 }
 function renderTabs() {
 const tr = t();
@@ -329,7 +331,8 @@ const tr = t();
 const id = Date.now() + Math.random();
 const lang = detectLanguage(filePath);
 const num = filePath ? null : untitledCounter++;
-const title = filePath ? getFileName(filePath) : ${tr.untitled} ${num};
+const title = filePath ? getFileName(filePath) : `${tr.untitled} ${num}`;
+
 const model = monaco.editor.createModel(content, lang);
 const tab = {
 id,
@@ -381,7 +384,8 @@ editor.layout();
 }
 editor.onDidChangeCursorPosition((e) => {
 const tr = t();
-cursorPosLabel.textContent = ${tr.line} ${e.position.lineNumber}, ${tr.col} ${e.position.column};
+cursorPosLabel.textContent = `${tr.line} ${e.position.lineNumber}, ${tr.col} ${e.position.column}`;
+
 });
 async function handleOpenFile() {
 try {
@@ -491,7 +495,8 @@ try {
 const content = await readTextFile(filePath);
 createNewTab(filePath, content);
 } catch (err) {
-alert(t().errOpen + ${filePath}:  + err);
+alert(`${t().errOpen}${filePath}: ${err}`);
+
 }
 }
 }
