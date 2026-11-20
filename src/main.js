@@ -45,6 +45,8 @@ const TRANSLATIONS = {
     untitled: 'Novi dokument',
     tipCloseTab: 'Zatvori karticu (Ctrl+W)',
     line: 'Red', col: 'Stupac',
+      words: 'Riječi', chars: 'Znakovi',
+
     confirmClose: (name) => 'Dokument "' + name + '" ima nespremljene promjene. Svejedno zatvoriti?',
     errOpen: 'Greška pri otvaranju datoteke: ',
     errSave: 'Greška pri spremanju datoteke: '
@@ -65,6 +67,8 @@ const TRANSLATIONS = {
     untitled: 'Nov dokument',
     tipCloseTab: 'Zapri zavihek (Ctrl+W)',
     line: 'Vrstica', col: 'Stolpec',
+        words: 'Besede', chars: 'Znaki',
+
     confirmClose: (name) => 'Dokument "' + name + '" ima neshranjene spremembe. Vseeno zaprem?',
     errOpen: 'Napaka pri odpiranju datoteke: ',
     errSave: 'Napaka pri shranjevanju datoteke: '
@@ -85,6 +89,8 @@ const TRANSLATIONS = {
     untitled: 'Untitled',
     tipCloseTab: 'Close tab (Ctrl+W)',
     line: 'Line', col: 'Col',
+        words: 'Words', chars: 'Characters',
+
     confirmClose: (name) => 'Document "' + name + '" has unsaved changes. Close anyway?',
     errOpen: 'Error opening file: ',
     errSave: 'Error saving file: '
@@ -105,6 +111,8 @@ const TRANSLATIONS = {
     untitled: 'Senza titolo',
     tipCloseTab: 'Chiudi scheda (Ctrl+W)',
     line: 'Riga', col: 'Col',
+        words: 'Parole', chars: 'Caratteri',
+
     confirmClose: (name) => 'Il documento "' + name + '" ha modifiche non salvate. Chiudere comunque?',
     errOpen: 'Errore durante l\'apertura del file: ',
     errSave: 'Errore durante il salvataggio del file: '
@@ -125,6 +133,8 @@ const TRANSLATIONS = {
     untitled: 'Unbenannt',
     tipCloseTab: 'Tab schließen (Strg+W)',
     line: 'Zeile', col: 'Spalte',
+        words: 'Wörter', chars: 'Zeichen',
+
     confirmClose: (name) => 'Das Dokument "' + name + '" hat ungespeicherte Änderungen. Trotzdem schließen?',
     errOpen: 'Fehler beim Öffnen der Datei: ',
     errSave: 'Fehler beim Speichern der Datei: '
@@ -145,6 +155,8 @@ const TRANSLATIONS = {
     untitled: 'Sans titre',
     tipCloseTab: 'Fermer l\'onglet (Ctrl+W)',
     line: 'Ligne', col: 'Col',
+        words: 'Mots', chars: 'Caractères',
+
     confirmClose: (name) => 'Le document "' + name + '" contient des modifications non enregistrées. Fermer quand même ?',
     errOpen: 'Erreur lors de l\'ouverture du fichier : ',
     errSave: 'Erreur lors de l\'enregistrement du fichier : '
@@ -165,6 +177,8 @@ const TRANSLATIONS = {
     untitled: 'Bez tytułu',
     tipCloseTab: 'Zamknij kartę (Ctrl+W)',
     line: 'Wiersz', col: 'Kol',
+        words: 'Słowa', chars: 'Znaki',
+
     confirmClose: (name) => 'Dokument "' + name + '" ma niezapisane zmiany. Zamknąć mimo to?',
     errOpen: 'Błąd otwierania pliku: ',
     errSave: 'Błąd zapisywania pliku: '
@@ -213,6 +227,8 @@ let untitledCounter = 1;
 const tabsBar = document.getElementById('tabs-bar');
 const filePathLabel = document.getElementById('file-path');
 const cursorPosLabel = document.getElementById('cursor-pos');
+const wordCountLabel = document.getElementById('word-count');
+
 const langSelect = document.getElementById('lang-select');
 const uiLangSelect = document.getElementById('ui-lang-select');
 const fontSizeLabel = document.getElementById('font-size-label');
@@ -231,6 +247,14 @@ function updateFontSize(newSize) {
   monaco.editor.remeasureFonts();
   editor.layout();
   editor.render(true);
+}
+function updateWordCount() {
+  const tr = t();
+  const text = editor.getValue();
+  const charCount = text.length;
+  const trimmed = text.trim();
+  const wordCount = trimmed === '' ? 0 : trimmed.split(/\s+/).length;
+  wordCountLabel.textContent = tr.words + ': ' + wordCount + ' | ' + tr.chars + ': ' + charCount;
 }
 
 
@@ -284,7 +308,10 @@ function applyUiLanguage() {
   cursorPosLabel.textContent = tr.line + ' ' + pos.lineNumber + ', ' + tr.col + ' ' + pos.column;
 
   renderTabs();
+  renderTabs();
+  updateWordCount();
 }
+
 
 uiLangSelect.onchange = (e) => {
   currentUiLang = e.target.value;
@@ -413,7 +440,10 @@ function switchTab(id) {
   renderTabs();
   editor.layout();
   editor.focus();
+  editor.focus();
+  updateWordCount();
 }
+
 
 function closeTab(id) {
   const index = tabs.findIndex(tb => tb.id === id);
@@ -442,6 +472,9 @@ function closeTab(id) {
 editor.onDidChangeCursorPosition((e) => {
   const tr = t();
   cursorPosLabel.textContent = tr.line + ' ' + e.position.lineNumber + ', ' + tr.col + ' ' + e.position.column;
+});
+editor.onDidChangeModelContent(() => {
+  updateWordCount();
 });
 
 async function handleOpenFile() {
