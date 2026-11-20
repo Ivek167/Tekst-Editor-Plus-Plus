@@ -228,7 +228,11 @@ function updateFontSize(newSize) {
     fontSize: currentFontSize,
     lineHeight: Math.round(currentFontSize * 1.5)
   });
+  monaco.editor.remeasureFonts();
+  editor.layout();
+  editor.render(true);
 }
+
 
 function applyUiLanguage() {
   const tr = t();
