@@ -562,12 +562,28 @@ document.getElementById('btn-minimap').onclick = () => {
 };
 
 
+monaco.editor.defineTheme('custom-light', {
+  base: 'vs',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#ffffff',
+    'editor.foreground': '#1e1e1e',
+    'editorLineNumber.foreground': '#666666'
+  }
+});
+
 document.getElementById('btn-theme').onclick = () => {
   isDark = !isDark;
-  monaco.editor.setTheme(isDark ? 'custom-dark' : 'vs');
+  const themeName = isDark ? 'custom-dark' : 'custom-light';
+  monaco.editor.setTheme(themeName);
+  editor.updateOptions({ theme: themeName });
   document.body.classList.toggle('light-mode', !isDark);
   applyUiLanguage();
+  editor.layout();
+  editor.render(true);
 };
+
 
 document.getElementById('btn-font-dec').onclick = () => updateFontSize(currentFontSize - 1);
 document.getElementById('btn-font-inc').onclick = () => updateFontSize(currentFontSize + 1);
