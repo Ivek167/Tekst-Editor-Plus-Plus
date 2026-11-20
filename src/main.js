@@ -629,3 +629,17 @@ document.fonts.ready.then(() => {
 
 createNewTab();
 applyUiLanguage();
+createNewTab();
+applyUiLanguage();
+
+let resizeTimer;
+function forceEditorRefresh() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    editor.layout();
+    editor.render(true);
+  }, 60);
+}
+
+window.addEventListener('resize', forceEditorRefresh);
+new ResizeObserver(forceEditorRefresh).observe(document.getElementById('editor-container'));
