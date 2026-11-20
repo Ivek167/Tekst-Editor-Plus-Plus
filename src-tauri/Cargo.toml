@@ -11,8 +11,9 @@ name = "moj_editor_teksta_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "Tekst Editor Plus Plus"
+name = "Tekst-Editor-Plus-Plus"
 path = "src/main.rs"
+
 
 
 [build-dependencies]
