@@ -508,19 +508,26 @@ document.getElementById('btn-wrap').onclick = () => {
   localStorage.setItem('wordWrap', isWordWrap ? 'on' : 'off');
   editor.updateOptions({ wordWrap: isWordWrap ? 'on' : 'off' });
   applyUiLanguage();
+  editor.layout();
+  editor.render(true);
 };
 
 document.getElementById('btn-lines').onclick = () => {
   showLineNumbers = !showLineNumbers;
   editor.updateOptions({ lineNumbers: showLineNumbers ? 'on' : 'off' });
   applyUiLanguage();
+  editor.layout();
+  editor.render(true);
 };
 
 document.getElementById('btn-minimap').onclick = () => {
   showMinimap = !showMinimap;
   editor.updateOptions({ minimap: { enabled: showMinimap } });
   applyUiLanguage();
+  editor.layout();
+  editor.render(true);
 };
+
 
 document.getElementById('btn-theme').onclick = () => {
   isDark = !isDark;
